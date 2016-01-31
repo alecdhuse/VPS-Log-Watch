@@ -11,6 +11,7 @@ class apache_access_log:
     timestamp = 0
     action = ""
     resource = ""
+    status = 0
     http_version = ""
     user_agent = ""
     referer = ""
@@ -26,10 +27,25 @@ class apache_access_log:
         #Parse timestamp and offset to UDT
         line_timestamp = datetime.strptime(fields[3][1:], '%d/%b/%Y:%H:%M:%S')
         offset_string = fields[4][:-1]
-        ts_offset = int(offset_string[-4:-2])*60 + int(offset_string[:-1][-2:]) * 60
-        if fields[4] == "-": ts_offset = -ts_offset
-        self.timestamp = int(line_timestamp.strftime('%s')) + ts_offset
-        
+        ts_offset = (int(offset_string[-4:-2])*60 + int(offset_string[-2:])) * 60
+        if offset_string[:1] == "-": ts_offset = -ts_offset
+        self.timestamp = int(line_timestamp.strftime('%s'))
+
+        #Split up request field
+        req_fields = shlex.split(fields[5])
+        self.action = req_fields[0]
+        self.resource = req_fields[1]
+        self.http_version = req_fields[2]
+
+        self.status = int(fields[6])
+        self.referer = fields[8]
+        self.user_agent = fields[9]
+
+        try:
+            self.object_size = int(fields[7])
+        except:
+            self.object_size = 0
+            
     def get_dictionary(self):
         new_dictionary = {}
         new_dictionary["ip"] = self.ip
@@ -38,15 +54,18 @@ class apache_access_log:
         new_dictionary["action"] = self.action
         new_dictionary["resource"] = self.resource
         new_dictionary["http_version"] = self.http_version
+        new_dictionary["status"] = self.status
         new_dictionary["user_agent"] = self.user_agent
         new_dictionary["referer"] = self.referer
         new_dictionary["object_size"] = self.object_size
-
+        new_dictionary["sourcetype"] = "access_combined"
+        
         return new_dictionary
         
 def read_apache_logfile(log_file, line_start=0, time_start=0):
     """Reads in Apache Logfile"""
-
+    log_list = []
+    
     if os.path.exists(log_file):
         with open(log_file) as f: 
             lines = f.readlines()
@@ -58,7 +77,8 @@ def read_apache_logfile(log_file, line_start=0, time_start=0):
                 continue
             else:
                 log_obj = apache_access_log(line)
-                print log_obj.get_dictionary()
-
+                log_list.append(log_obj.get_dictionary())
     else:
         print "File Not Found"
+
+    return log_list
