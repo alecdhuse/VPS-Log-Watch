@@ -11,7 +11,6 @@ from datetime import datetime
 class config:
     log_monitors = []
     file_path = ""
-    host_id = ""
     
     def __init__(self):
         script_dir = os.path.dirname(__file__)
@@ -45,12 +44,11 @@ class config:
 
     def write_config(self):
         config_json = {
-            "host": self.host_id,
             "monitor" : self.log_monitors
         }
         
         with open(self.file_path, 'w') as outfile:
-            json.dump(config_json, outfile, sort_keys = False, indent = 4)
+            json.dump(config_json, outfile, sort_keys = True, indent = 4)
 
 def check_monitors(config_obj):
     for monitor in config_obj.log_monitors:
@@ -60,7 +58,7 @@ def check_monitors(config_obj):
             monitor["last_time_read"] = int(datetime.now().strftime('%s'))
             
             for log_entry in log_list:
-                proccess_event(config_obj.host_id, monitor, log_entry)
+                proccess_event(monitor["host_id"], monitor, log_entry)
 
     config_obj.write_config()
     
