@@ -10,6 +10,7 @@ class apache_access_log:
     ip = "0.0.0.0"
     user_id = ""
     timestamp = 0
+    timestamp_str = ""
     action = ""
     resource = ""
     status = 0
@@ -28,20 +29,25 @@ class apache_access_log:
         #Parse timestamp and offset to UDT
         line_timestamp = datetime.strptime(fields[3][1:], '%d/%b/%Y:%H:%M:%S')
         offset_string = fields[4][:-1]
+        self.timestamp_str = str(fields[3][1:]) + " " + str(offset_string)
         ts_offset = (int(offset_string[-4:-2])*60 + int(offset_string[-2:])) * 60
         if offset_string[:1] == "-": ts_offset = -ts_offset
         self.timestamp = int(line_timestamp.strftime('%s'))
 
         #Split up request field
-        req_fields = shlex.split(fields[5])
-        self.action = req_fields[0]
-        self.resource = req_fields[1]
-        self.http_version = req_fields[2]
+        try:
+                request_string = str(fields[5]).replace("'", "\'")
+                req_fields = shlex.split(request_string)
+                self.action = req_fields[0]
+                self.resource = req_fields[1]
+                self.http_version = req_fields[2]
+        except:
+                print (str(fields[5]))
 
         self.status = int(fields[6])
         self.referer = fields[8]
         self.user_agent = fields[9]
-
+                       
         try:
             self.object_size = int(fields[7])
         except:
@@ -52,6 +58,7 @@ class apache_access_log:
         new_dictionary["ip"] = self.ip
         new_dictionary["user_id"] = self.user_id
         new_dictionary["time"] = self.timestamp
+        new_dictionary["timestamp"] = self.timestamp_str
         new_dictionary["action"] = self.action
         new_dictionary["resource"] = self.resource
         new_dictionary["http_version"] = self.http_version
