@@ -59,6 +59,7 @@ class apache_access_log:
         new_dictionary["referer"] = self.referer
         new_dictionary["object_size"] = self.object_size
         new_dictionary["sourcetype"] = "access_combined"
+        new_dictionary["type"] = "Webservers"
         
         return new_dictionary
         
