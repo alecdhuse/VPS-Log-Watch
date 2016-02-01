@@ -24,11 +24,14 @@ class config:
         with open(self.file_path, 'w') as outfile:
             json.dump(config_json, outfile)
 
-def check_monitors(config_obj):
+def check_monitors(config_obj): 
     for monitor in config_obj.log_monitors:
         if monitor["type"] == "apache access combined":
             log_list = apache_tools.read_apache_logfile(monitor["location"], monitor["last_line_read"])
             monitor["last_line_read"] = monitor["last_line_read"] + len(log_list)
+
+            for le in log_list:
+                print str(le)
 
     config_obj.write_config()
     
