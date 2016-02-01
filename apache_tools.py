@@ -2,6 +2,7 @@
 
 import os
 import shlex
+
 from datetime import datetime
 
 
@@ -50,7 +51,7 @@ class apache_access_log:
         new_dictionary = {}
         new_dictionary["ip"] = self.ip
         new_dictionary["user_id"] = self.user_id
-        new_dictionary["timestamp"] = self.timestamp
+        new_dictionary["time"] = self.timestamp
         new_dictionary["action"] = self.action
         new_dictionary["resource"] = self.resource
         new_dictionary["http_version"] = self.http_version
@@ -58,8 +59,6 @@ class apache_access_log:
         new_dictionary["user_agent"] = self.user_agent
         new_dictionary["referer"] = self.referer
         new_dictionary["object_size"] = self.object_size
-        new_dictionary["sourcetype"] = "access_combined"
-        new_dictionary["type"] = "Webservers"
         
         return new_dictionary
         
@@ -84,6 +83,6 @@ def read_apache_logfile(log_file, line_start=0, time_start=0):
                 current_line = current_line + 1
 
     else:
-        print "File Not Found"
+        print ("File Not Found")
 
     return log_list
