@@ -37,10 +37,11 @@ class config:
                     
                 now = datetime.now()
                 time_arr = monitor["rotation_start"].split(":")
-                rotate_time = now.replace(hour=int(time_arr[0]), minute=int(time_arr[1]))
+                rotate_time = now.replace(hour=int(time_arr[0]), minute=int(time_arr[1]), second=0, microsecond=0)
 
                 if (last_read < rotate_time) and (rotate_time < now):
                     monitor["last_line_read"] = 0
+                    print ("Log rotated")
 
     def write_config(self):
         config_json = {
@@ -54,10 +55,15 @@ def check_monitors(config_obj):
     for monitor in config_obj.log_monitors:
         if monitor["type"] == "apache access combined":
             log_list = apache_tools.read_apache_logfile(monitor["location"], monitor["last_line_read"])
+            line_count = 0
             
             for log_entry in log_list:
                 post_success = proccess_event(monitor["host_id"], monitor, log_entry)
-                
+                line_count = line_count + 1
+
+
+        print ("Send %s log lines." % str(line_count))
+        
     config_obj.write_config()
     
 def main():
@@ -99,7 +105,7 @@ def proccess_event(host_id, monitor_config, log_data):
                     monitor_config["last_line_read"] = monitor_config["last_line_read"] + 1
                     monitor_config["last_time_read"] = int(datetime.now().strftime('%s'))
                 else:
-                    print ("Error sending request.")
+                    print ("Error sending request, server responded with error.")
                     break
                 
             except Exception as err:
@@ -114,6 +120,12 @@ def test_apache():
     file_path = os.path.join(script_dir, log_file)
     log_list = apache_tools.read_apache_logfile(file_path)
 
-    print (log_list)
+    for l in log_list:
+        r = l["resource"]
+        vs = apache_tools.read_variables(r)
+        print (str(vs))
+        
+    # print (log_list)
 
-main()
+test_apache()
+# main()
