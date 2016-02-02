@@ -93,3 +93,14 @@ def read_apache_logfile(log_file, line_start=0, time_start=0):
         print ("File Not Found")
 
     return log_list
+
+def read_variables(request):
+    variables_dict = {}
+    variables_str = request.split("?")
+
+    if len(variables_str) > 1:
+        for v in variables_str[1].split("&"):
+            v_pair = v.split("=")
+            variables_dict[v_pair[0]] = v_pair[1]
+
+    return variables_dict
