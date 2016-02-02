@@ -54,12 +54,10 @@ def check_monitors(config_obj):
     for monitor in config_obj.log_monitors:
         if monitor["type"] == "apache access combined":
             log_list = apache_tools.read_apache_logfile(monitor["location"], monitor["last_line_read"])
-            monitor["last_line_read"] = monitor["last_line_read"] + len(log_list)
-            monitor["last_time_read"] = int(datetime.now().strftime('%s'))
             
             for log_entry in log_list:
-                proccess_event(monitor["host_id"], monitor, log_entry)
-
+                post_success = proccess_event(monitor["host_id"], monitor, log_entry)
+                
     config_obj.write_config()
     
 def main():
@@ -86,9 +84,29 @@ def proccess_event(host_id, monitor_config, log_data):
                 response = urllib.request.urlopen(req)
                 read_response = response.read()
 
+                try:
+                    response_json = json.loads(str(read_response)[2:-1])
+
+                    if "text" in response_json:
+                        if response_json["text"] == "Success":
+                            post_success = True
+                        else:
+                            post_success = False
+                except:
+                    post_success = False
+                    
+                if post_success == True:
+                    monitor_config["last_line_read"] = monitor_config["last_line_read"] + 1
+                    monitor_config["last_time_read"] = int(datetime.now().strftime('%s'))
+                else:
+                    print ("Error sending request.")
+                    break
+                
             except Exception as err:
                 print ("Error sending request")
                 print (str(err))
+
+    return post_success
 
 def test_apache():
     script_dir = os.path.dirname(__file__)
