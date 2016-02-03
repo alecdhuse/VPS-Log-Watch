@@ -80,8 +80,8 @@ def read_apache_logfile(log_file, line_start=0, time_start=0):
         current_line = 0;
 
         # Hack to fix log rotation
-        if len(lines) > linestart:
-            linestart = 0
+        if len(lines) > line_start:
+            line_start = 0
             print ("Log needs to be rotated")
             
         for line in lines:
