@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/bin/python3.0
 
 import os
 import shlex
@@ -79,8 +79,12 @@ def read_apache_logfile(log_file, line_start=0, time_start=0):
             
         current_line = 0;
 
-        for line in lines:
+        # Hack to fix log rotation
+        if len(lines) > linestart:
+            linestart = 0
+            print ("Log needs to be rotated")
             
+        for line in lines:
             if (line_start > current_line):
                 current_line = current_line + 1
                 continue

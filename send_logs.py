@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/bin/python3.0
 
 import apache_tools
 import json
@@ -56,18 +56,19 @@ def check_monitors(config_obj):
         if monitor["type"] == "apache access combined":
             log_list = apache_tools.read_apache_logfile(monitor["location"], monitor["last_line_read"])
             line_count = 0
+
+            # hack to fix log rotation
+            if len(log_list) > monitor["last_line_read"]:
+                monitor["last_line_read"] = 0
+                print ("Updated log rotation")
             
             for log_entry in log_list:
                 post_success = proccess_event(monitor["host_id"], monitor, log_entry)
                 line_count = line_count + 1
 
-
-        print ("Send %s log lines." % str(line_count))
-        
     config_obj.write_config()
     
 def main():
-    print ("Script started")
     config_obj = config()
     check_monitors(config_obj)
 
@@ -102,6 +103,7 @@ def proccess_event(host_id, monitor_config, log_data):
                     post_success = False
                     
                 if post_success == True:
+                    # Update last line and time read
                     monitor_config["last_line_read"] = monitor_config["last_line_read"] + 1
                     monitor_config["last_time_read"] = int(datetime.now().strftime('%s'))
                 else:
@@ -109,6 +111,7 @@ def proccess_event(host_id, monitor_config, log_data):
                     break
                 
             except Exception as err:
+                post_success = False
                 print ("Error sending request")
                 print (str(err))
 
@@ -127,5 +130,4 @@ def test_apache():
         
     # print (log_list)
 
-test_apache()
-# main()
+main()
