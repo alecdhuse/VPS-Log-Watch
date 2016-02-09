@@ -1,6 +1,5 @@
 #!/usr/local/bin/python3.0
 
-import os
 import shlex
 
 from datetime import datetime
@@ -36,13 +35,14 @@ class apache_access_log:
 
         #Split up request field
         try:
-                request_string = str(fields[5]).replace("'", "\'")
-                req_fields = shlex.split(request_string)
-                self.action = req_fields[0]
-                self.resource = req_fields[1]
-                self.http_version = req_fields[2]
+                if len(fields[5]) > 1:
+                    request_string = str(fields[5]).replace("'", "\'")
+                    req_fields = shlex.split(request_string)
+                    self.action = req_fields[0]
+                    self.resource = req_fields[1]
+                    self.http_version = req_fields[2]
         except:
-                print (str(fields[5]))
+                print ("Error with request field: " + str(fields[5]))
 
         self.status = int(fields[6])
         self.referer = fields[8]
@@ -69,32 +69,19 @@ class apache_access_log:
         
         return new_dictionary
         
-def read_apache_logfile(log_file, line_start=0, time_start=0):
+def read_apache_logfile(log_lines, line_start=0, time_start=0):
     """Reads in Apache Logfile"""
     log_list = []
-
-    if os.path.exists(log_file):
-        with open(log_file) as f: 
-            lines = f.readlines()
-            
-        current_line = 0;
-
-        # Hack to fix log rotation
-        if len(lines) > line_start:
-            line_start = 0
-            print ("Log needs to be rotated")
-            
-        for line in lines:
-            if (line_start > current_line):
-                current_line = current_line + 1
-                continue
-            else:
-                log_obj = apache_access_log(line)
-                log_list.append(log_obj.get_dictionary())
-                current_line = current_line + 1
-
-    else:
-        print ("File Not Found")
+    current_line = 0
+    
+    for line in log_lines:
+        if (line_start > current_line):
+            current_line = current_line + 1
+            continue
+        else:
+            log_obj = apache_access_log(line)
+            log_list.append(log_obj.get_dictionary())
+            current_line = current_line + 1
 
     return log_list
 

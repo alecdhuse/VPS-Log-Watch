@@ -2,6 +2,7 @@
 
 import apache_tools
 import json
+import log_tools
 import os
 import sys
 import urllib.request
@@ -27,21 +28,6 @@ class config:
                 self.host_id = json_data["host"];
             else:
                 self.host_id = "localhost"
-                
-            for monitor in self.log_monitors:
-                # Check if log was rotated
-                if "last_time_read" in monitor:
-                    last_read = datetime.fromtimestamp(monitor["last_time_read"])
-                else:
-                    last_read = datetime.fromtimestamp(0)
-                    
-                now = datetime.now()
-                time_arr = monitor["rotation_start"].split(":")
-                rotate_time = now.replace(hour=int(time_arr[0]), minute=int(time_arr[1]), second=0, microsecond=0)
-
-                if (last_read < rotate_time) and (rotate_time < now):
-                    monitor["last_line_read"] = 0
-                    print ("Log rotated")
 
     def write_config(self):
         config_json = {
@@ -54,13 +40,16 @@ class config:
 def check_monitors(config_obj):
     for monitor in config_obj.log_monitors:
         if monitor["type"] == "apache access combined":
-            log_list = apache_tools.read_apache_logfile(monitor["location"], monitor["last_line_read"])
-            line_count = 0
+            log_lines = log_tools.read_single_line_log_file(monitor["location"])
 
-            # hack to fix log rotation
-            if len(log_list) > monitor["last_line_read"]:
+            # Check to see if log was rotated
+            if len(log_lines) < monitor["last_line_read"]:
                 monitor["last_line_read"] = 0
-                print ("Updated log rotation")
+                print ("Log Rotated: %s" % str(monitor["location"]))
+                                  
+            # Parse Apache access combined
+            log_list = apache_tools.read_apache_logfile(log_lines, monitor["last_line_read"])
+            line_count = 0
             
             for log_entry in log_list:
                 post_success = proccess_event(monitor["host_id"], monitor, log_entry)
