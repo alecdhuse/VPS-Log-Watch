@@ -17,6 +17,9 @@ Monitors logs and sends new entries via HTTP to a collector like Splunk.
 ### apache_tools.py
 A collection of functions for dealing with apache logs. This is used by the main scripts.
 
+### log_tools.py
+A collection of shared function for log proccessing.
+
 ## Troubleshooting
 
 Your VPS host may block various outbound connections, causing issues with the script. However port 80 is usually open. If your receiving host is running linux an easy fix is to use port forwarding to direct port 80 to the correct listening port. Below is a one line rule that will accomplish this.
